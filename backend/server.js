@@ -2,11 +2,10 @@ const express = require('express');
 const cors = require('cors');
 const helmet = require('helmet');
 require('dotenv').config();
-console.log('DEBUG mot de passe:', JSON.stringify(process.env.DB_PASSWORD));
 
 const app = express();
 
-app.use(cors());
+app.use(cors({ origin: true }));
 app.use(helmet());
 app.use(express.json());
 
