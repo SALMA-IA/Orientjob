@@ -1,42 +1,36 @@
 import React, { useEffect, useState } from 'react';
-import { View, Text, Button, StyleSheet, Platform } from 'react-native';
-import * as SecureStore from 'expo-secure-store';
-
-const getItem = async (key) => {
-  if (Platform.OS === 'web') return localStorage.getItem(key);
-  return await SecureStore.getItemAsync(key);
+import { View, Text, Button, ScrollView } from 'react-native';
+OrientJob — Guide de développement, suite (étapes 13 à 28) Page 7
+import { getItem, removeItem } from '../storage';
+import { s } from '../styles';
+const MENUS = {
+etudiant: [['Mon profil', 'Profile'], ['Offres de stage', 'Offers', { type: 'stage' }],
+['Offres recommandées (IA)', 'Recommended'], ['Mes candidatures', 'MyApplications'],
+['Orientation (IA)', 'SelfEval'], ['Sécurité (MFA)', 'Mfa']],
+diplome: [['Mon profil', 'Profile'], ["Offres d'emploi", 'Offers', { type: 'emploi' }],
+['Offres recommandées (IA)', 'Recommended'], ['Mes candidatures', 'MyApplications'],
+['Orientation (IA)', 'SelfEval'], ['Sécurité (MFA)', 'Mfa']],
+recruteur: [['Mon entreprise', 'Company'], ['Publier une offre', 'PublishOffer'],
+['Mes offres', 'MyOffers'], ['Sécurité (MFA)', 'Mfa']],
+admin: [['Administration', 'Admin'], ['Sécurité (MFA)', 'Mfa']],
 };
-
-const removeItem = async (key) => {
-  if (Platform.OS === 'web') return localStorage.removeItem(key);
-  return await SecureStore.deleteItemAsync(key);
-};
-
 export default function HomeScreen({ navigation }) {
-  const [role, setRole] = useState('');
-
-  useEffect(() => {
-    getItem('role').then((r) => setRole(r || ''));
-  }, []);
-
-  const logout = async () => {
-    await removeItem('token');
-    await removeItem('role');
-    await removeItem('userId');
-    navigation.replace('Login');
-  };
-
-  return (
-    <View style={styles.container}>
-      <Text style={styles.title}>Connexion réussie ✅</Text>
-      <Text style={styles.sub}>Rôle : {role}</Text>
-      <Button title="Se déconnecter" onPress={logout} />
-    </View>
-  );
+const [role, setRole] = useState('');
+useEffect(() => { getItem('role').then((r) => setRole(r || '')); }, []);
+const logout = async () => {
+for (const k of ['token', 'role', 'userId']) await removeItem(k);
+navigation.replace('Login');
+};
+return (
+<ScrollView contentContainerStyle={s.container}>
+<Text style={s.title}>Accueil ({role})</Text>
+{(MENUS[role] || []).map(([label, screen, params]) => (
+<View key={label} style={{ marginBottom: 10 }}>
+<Button title={label} onPress={() => navigation.navigate(screen, params)} />
+</View>
+))}
+<View style={s.gap} />
+<Button title="Se déconnecter" color="#a00" onPress={logout} />
+</ScrollView>
+);
 }
-
-const styles = StyleSheet.create({
-  container: { flex: 1, justifyContent: 'center', alignItems: 'center', padding: 20 },
-  title: { fontSize: 24, fontWeight: 'bold', marginBottom: 10 },
-  sub: { fontSize: 16, marginBottom: 20 },
-});
