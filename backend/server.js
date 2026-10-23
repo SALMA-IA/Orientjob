@@ -17,6 +17,9 @@ app.use('/api/auth', authRoutes);
 const profilRoutes = require('./src/routes/profil');
 app.use('/api/profil', profilRoutes);
 
+app.use('/api/entreprise', require('./src/routes/entreprise'));
+app.use('/api/admin', require('./src/routes/admin'));
+
 app.get('/', (req, res) => res.send('OrientJob API is running'));
 
 const entrepriseRoutes = require('./src/routes/entreprise');
