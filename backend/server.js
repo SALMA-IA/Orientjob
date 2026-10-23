@@ -8,6 +8,8 @@ const app = express();
 app.use(cors({ origin: true }));
 app.use(helmet());
 app.use(express.json());
+const { globalLimiter } = require('./src/middleware/limiter');
+app.use('/api', globalLimiter);
 
 const authRoutes = require('./src/routes/auth');
 app.use('/api/auth', authRoutes);
