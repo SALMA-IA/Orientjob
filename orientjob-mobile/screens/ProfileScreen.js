@@ -1,78 +1,76 @@
-import React, { useState, useEffect } from 'react';
-import { View, TextInput, Button, Text, StyleSheet, Platform } from 'react-native';
-import axios from 'axios';
-import * as SecureStore from 'expo-secure-store';
-
-const API_URL = 'http://192.168.2.192:5000/api';
-
-const getItem = async (key) => {
-  if (Platform.OS === 'web') return localStorage.getItem(key);
-  return await SecureStore.getItemAsync(key);
-};
+import React, { useEffect, useState } from 'react';
+import { ScrollView, TextInput, Button, Text, Platform } from 'react-native';
+import * as DocumentPicker from 'expo-document-picker';
+import api, { errMsg } from '../api';
+import { s } from '../styles';
 
 export default function ProfileScreen() {
-  const [nom, setNom] = useState('');
-  const [prenom, setPrenom] = useState('');
-  const [formation, setFormation] = useState('');
-  const [competences, setCompetences] = useState('');
-  const [message, setMessage] = useState('');
+  const [f, setF] = useState({ nom: '', prenom: '', formation: '', competences: '', ville: '' });
+  const [hasCv, setHasCv] = useState(false);
+  const [msg, setMsg] = useState('');
+  const set = (k) => (v) => setF({ ...f, [k]: v });
 
-  // Charger le profil existant à l'ouverture de l'écran
   useEffect(() => {
-    const charger = async () => {
-      try {
-        const token = await getItem('token');
-        const res = await axios.get(`${API_URL}/profil/moi`, {
-          headers: { Authorization: `Bearer ${token}` },
+    api.get('/profil/moi').then((r) => {
+      const p = r.data;
+      if (p) {
+        setF({
+          nom: p.nom || '',
+          prenom: p.prenom || '',
+          formation: p.formation || '',
+          competences: (p.competences || []).join(', '),
+          ville: p.ville || '',
         });
-        if (res.data) {
-          setNom(res.data.nom || '');
-          setPrenom(res.data.prenom || '');
-          setFormation(res.data.formation || '');
-          setCompetences((res.data.competences || []).join(', '));
-        }
-      } catch (err) {
-        // pas de profil encore : on laisse les champs vides
+        setHasCv(!!p.cv_url);
       }
-    };
-    charger();
+    }).catch(() => {});
   }, []);
 
-  const handleSave = async () => {
+  const save = async () => {
     try {
-      const token = await getItem('token');
-      await axios.post(
-        `${API_URL}/profil`,
-        {
-          nom,
-          prenom,
-          formation,
-          competences: competences.split(',').map((c) => c.trim()).filter(Boolean),
-          cvUrl: '',
-        },
-        { headers: { Authorization: `Bearer ${token}` } }
-      );
-      setMessage('Profil enregistré !');
-    } catch (err) {
-      setMessage("Erreur lors de l'enregistrement");
+      await api.post('/profil', {
+        ...f,
+        competences: f.competences.split(',').map((c) => c.trim()).filter(Boolean),
+      });
+      setMsg('Profil enregistré');
+    } catch (e) {
+      setMsg(errMsg(e));
+    }
+  };
+
+  const pickCv = async () => {
+    const r = await DocumentPicker.getDocumentAsync({
+      type: 'application/pdf',
+      copyToCacheDirectory: true,
+    });
+    if (r.canceled) return;
+    const a = r.assets[0];
+    const fd = new FormData();
+    if (Platform.OS === 'web') fd.append('cv', a.file, a.name);
+    else fd.append('cv', { uri: a.uri, name: a.name, type: 'application/pdf' });
+    try {
+      await api.post('/profil/cv', fd, { headers: { 'Content-Type': 'multipart/form-data' } });
+      setHasCv(true);
+      setMsg('CV envoyé et chiffré');
+    } catch (e) {
+      setMsg(errMsg(e));
     }
   };
 
   return (
-    <View style={styles.container}>
-      <Text style={styles.title}>Mon profil</Text>
-      <TextInput placeholder="Nom" value={nom} onChangeText={setNom} style={styles.input} />
-      <TextInput placeholder="Prénom" value={prenom} onChangeText={setPrenom} style={styles.input} />
-      <TextInput placeholder="Formation (ex. IA & Cybersécurité)" value={formation} onChangeText={setFormation} style={styles.input} />
-      <TextInput placeholder="Compétences (séparées par des virgules)" value={competences} onChangeText={setCompetences} style={styles.input} />
-      {message ? <Text style={{ marginBottom: 10 }}>{message}</Text> : null}
-      <Button title="Enregistrer" onPress={handleSave} />
-    </View>
+    <ScrollView contentContainerStyle={s.container}>
+      <Text style={s.title}>Mon profil</Text>
+      <TextInput placeholder="Nom" value={f.nom} onChangeText={set('nom')} style={s.input} />
+      <TextInput placeholder="Prénom" value={f.prenom} onChangeText={set('prenom')} style={s.input} />
+      <TextInput placeholder="Formation (ex. IA & Cybersécurité)" value={f.formation}
+        onChangeText={set('formation')} style={s.input} />
+      <TextInput placeholder="Compétences (virgules)" value={f.competences}
+        onChangeText={set('competences')} style={s.input} />
+      <TextInput placeholder="Ville" value={f.ville} onChangeText={set('ville')} style={s.input} />
+      {msg ? <Text style={s.label}>{msg}</Text> : null}
+      <Button title="Enregistrer le profil" onPress={save} />
+      <Text style={[s.label, { marginTop: 20 }]}>CV : {hasCv ? 'envoyé' : 'aucun'}</Text>
+      <Button title="Choisir mon CV (PDF)" onPress={pickCv} />
+    </ScrollView>
   );
 }
-
-const styles = StyleSheet.create({
-  container: { flex: 1, padding: 20, paddingTop: 60 },
-  title: { fontSize: 24, fontWeight: 'bold', marginBottom: 20 },
-  input: { borderWidth: 1, borderColor: '#ccc', borderRadius: 8, padding: 12, marginBottom: 12 },
-});

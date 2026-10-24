@@ -1,3 +1,6 @@
 node_modules/ 
 .env 
 .expo/
+backend/uploads/
+backend/certs/
+ia-service/venv/
