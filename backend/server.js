@@ -20,6 +20,8 @@ app.use('/api/profil', profilRoutes);
 app.use('/api/entreprise', require('./src/routes/entreprise'));
 app.use('/api/admin', require('./src/routes/admin'));
 
+app.use('/api/candidatures', require('./src/routes/candidatures'));
+
 app.get('/', (req, res) => res.send('OrientJob API is running'));
 
 const entrepriseRoutes = require('./src/routes/entreprise');
@@ -30,3 +32,4 @@ app.use('/api/offres', offresRoutes);
 
 const PORT = process.env.PORT || 5000;
 app.listen(PORT, () => console.log(`Server running on port ${PORT}`));
+
