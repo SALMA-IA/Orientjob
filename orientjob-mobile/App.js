@@ -14,6 +14,7 @@ import ApplicantsScreen from './screens/ApplicantsScreen';
 import MyApplicationsScreen from './screens/MyApplicationsScreen';
 import ChatScreen from './screens/ChatScreen';
 import RecommendedScreen from './screens/RecommendedScreen';
+import AdminScreen from './screens/AdminScreen';
 
 const Stack = createNativeStackNavigator();
 
@@ -34,6 +35,7 @@ export default function App() {
         <Stack.Screen name="MyApplications" component={MyApplicationsScreen} options={{ title: 'Candidatures' }} />
         <Stack.Screen name="Chat" component={ChatScreen} options={{ title: 'Messagerie' }} />
         <Stack.Screen name="Recommended" component={RecommendedScreen} options={{ title: 'Recommandées' }} />
+        <Stack.Screen name="Admin" component={AdminScreen} options={{ title: 'Administration' }} />
       </Stack.Navigator>
     </NavigationContainer>
   );
