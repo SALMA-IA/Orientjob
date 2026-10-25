@@ -20,7 +20,6 @@ setOffres(r.data); setMsg('');
 useEffect(() => { charger(); }, []);
 return (
 <View style={s.container}>
-OrientJob — Guide de développement, suite (étapes 13 à 28) Page 17
 <Text style={s.title}>{type === 'emploi' ? "Offres d'emploi" : 'Offres de stage'}</Text>
 <TextInput placeholder="Filière ou mot-clé (ex. python)" value={q} onChangeText={setQ} style={s.input} />
 <TextInput placeholder="Ville" value={ville} onChangeText={setVille} style={s.input} />

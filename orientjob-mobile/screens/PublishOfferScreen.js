@@ -33,7 +33,6 @@ return (
 style={[s.input, { height: 90 }]} multiline />
 <TextInput placeholder="Compétences requises (virgules)" value={f.competences}
 onChangeText={set('competences')} style={s.input} />
-OrientJob — Guide de développement, suite (étapes 13 à 28) Page 16
 <TextInput placeholder="Ville" value={f.ville} onChangeText={set('ville')} style={s.input} />
 <TextInput placeholder="Durée (ex. 3 mois)" value={f.duree} onChangeText={set('duree')} style={s.input} />
 {type === 'emploi' && (
