@@ -24,6 +24,8 @@ app.use('/api/candidatures', require('./src/routes/candidatures'));
 
 app.use('/api/messages', require('./src/routes/messages'));
 
+app.use('/api/signalements', require('./src/routes/signalements'));
+
 app.get('/', (req, res) => res.send('OrientJob API is running'));
 
 const entrepriseRoutes = require('./src/routes/entreprise');
