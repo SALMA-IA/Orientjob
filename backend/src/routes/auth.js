@@ -4,6 +4,7 @@ const jwt = require('jsonwebtoken');
 const pool = require('../config/db');
 const { authLimiter } = require('../middleware/limiter');
 const { logAudit } = require('../utils/audit');
+const speakeasy = require('speakeasy');
 
 const router = express.Router();
 const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
@@ -29,22 +30,40 @@ router.post('/register', authLimiter, async (req, res) => {
   }
 });
 
+
 router.post('/login', authLimiter, async (req, res) => {
-  const { email, password } = req.body;
+  const { email, password, code } = req.body || {};
   try {
-    const r = await pool.query('SELECT * FROM utilisateurs WHERE email = $1',
-      [(email || '').toLowerCase()]);
+    const r = await pool.query('SELECT * FROM utilisateurs WHERE email = $1', [
+      (email || '').toLowerCase(),
+    ]);
     const user = r.rows[0];
     const ok = user && (await bcrypt.compare(password || '', user.mot_de_passe_hash));
     if (!ok) {
       await logAudit(user && user.id, 'CONNEXION_ECHOUEE', req.ip);
       return res.status(401).json({ error: 'Identifiants incorrects' });
     }
+    if (user.mfa_active) {
+      if (!code) return res.status(401).json({ error: 'Code MFA requis', mfaRequired: true });
+      const valide = speakeasy.totp.verify({
+        secret: user.mfa_secret,
+        encoding: 'base32',
+        token: String(code),
+        window: 1,
+      });
+      if (!valide) {
+        await logAudit(user.id, 'MFA_ECHEC', req.ip);
+        return res.status(401).json({ error: 'Code MFA invalide', mfaRequired: true });
+      }
+    }
     await logAudit(user.id, 'CONNEXION', req.ip);
-    const token = jwt.sign({ id: user.id, role: user.role }, process.env.JWT_SECRET,
-      { expiresIn: '2h' });
+    const token = jwt.sign({ id: user.id, role: user.role }, process.env.JWT_SECRET, {
+      expiresIn: '2h',
+    });
     res.json({ token, role: user.role, userId: user.id });
-  } catch (err) { res.status(500).json({ error: 'Erreur serveur' }); }
+  } catch (err) {
+    res.status(500).json({ error: 'Erreur serveur' });
+  }
 });
 
 module.exports = router;

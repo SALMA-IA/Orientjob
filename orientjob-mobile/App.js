@@ -17,6 +17,7 @@ import RecommendedScreen from './screens/RecommendedScreen';
 import SelfEvalScreen from './screens/SelfEvalScreen';
 import RecommendationsScreen from './screens/RecommendationsScreen';
 import AdminScreen from './screens/AdminScreen';
+import MfaScreen from './screens/MfaScreen';
 
 const Stack = createNativeStackNavigator();
 
@@ -40,6 +41,7 @@ export default function App() {
         <Stack.Screen name="SelfEval" component={SelfEvalScreen} options={{ title: 'Auto-évaluation' }} />
         <Stack.Screen name="Recommendations" component={RecommendationsScreen} options={{ title: 'Orientation' }} />
         <Stack.Screen name="Admin" component={AdminScreen} options={{ title: 'Administration' }} />
+        <Stack.Screen name="Mfa" component={MfaScreen} options={{ title: 'Sécurité' }} />
       </Stack.Navigator>
     </NavigationContainer>
   );

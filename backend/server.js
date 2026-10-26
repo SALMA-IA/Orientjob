@@ -21,6 +21,7 @@ app.use('/api/messages', require('./src/routes/messages'));
 app.use('/api/signalements', require('./src/routes/signalements'));
 app.use('/api/orientation', require('./src/routes/orientation'));
 app.use('/api/admin', require('./src/routes/admin'));
+app.use('/api/mfa', require('./src/routes/mfa'));
 
 app.get('/', (req, res) => res.send('OrientJob API is running'));
 
