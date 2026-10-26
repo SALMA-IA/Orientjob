@@ -3,38 +3,33 @@ const cors = require('cors');
 const helmet = require('helmet');
 require('dotenv').config();
 
-const app = express();
+const { globalLimiter } = require('./src/middleware/limiter');
 
+const app = express();
+app.disable('x-powered-by');
 app.use(cors({ origin: true }));
 app.use(helmet());
-app.use(express.json());
-const { globalLimiter } = require('./src/middleware/limiter');
+app.use(express.json({ limit: '100kb' }));
 app.use('/api', globalLimiter);
 
-const authRoutes = require('./src/routes/auth');
-app.use('/api/auth', authRoutes);
-
-const profilRoutes = require('./src/routes/profil');
-app.use('/api/profil', profilRoutes);
-
+app.use('/api/auth', require('./src/routes/auth'));
+app.use('/api/profil', require('./src/routes/profil'));
 app.use('/api/entreprise', require('./src/routes/entreprise'));
-app.use('/api/admin', require('./src/routes/admin'));
-
+app.use('/api/offres', require('./src/routes/offres'));
 app.use('/api/candidatures', require('./src/routes/candidatures'));
-
 app.use('/api/messages', require('./src/routes/messages'));
-
 app.use('/api/signalements', require('./src/routes/signalements'));
+app.use('/api/orientation', require('./src/routes/orientation'));
+app.use('/api/admin', require('./src/routes/admin'));
 
 app.get('/', (req, res) => res.send('OrientJob API is running'));
 
-const entrepriseRoutes = require('./src/routes/entreprise');
-app.use('/api/entreprise', entrepriseRoutes);
+app.use((req, res) => res.status(404).json({ error: 'Route introuvable' }));
 
-const offresRoutes = require('./src/routes/offres');
-app.use('/api/offres', offresRoutes);
+app.use((err, req, res, next) => {
+  console.error(err.message);
+  res.status(500).json({ error: 'Erreur serveur' });
+});
 
 const PORT = process.env.PORT || 5000;
-app.listen(PORT, () => console.log(`Server running on port ${PORT}`));
-
-
+app.listen(PORT, () => console.log(`HTTP sur le port ${PORT}`));
